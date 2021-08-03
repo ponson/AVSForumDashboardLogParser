@@ -1,5 +1,6 @@
 import pandas as pd
 import openpyxl
+import os
 
 VOLUME_TREND_LOG_FILE = r"data/VolumeTrendQuery.csv"
 POST_SEARCH_LOG_FILE = r"data/PostSearchQuery.csv"
@@ -85,6 +86,14 @@ def handle_products(df_input, df_prods, out_filename):
     df_query_prods.iloc[:, 0:3].to_csv(out_filename)
 
 
+def remove_output_files():
+    out_filelist = [VOLUME_TREND_OUTPUT_FILE, POST_SEARCH_OUTPUT_FILE,VOLUME_TREND_OUTPUT_FILE_OTHERS,POST_SEARCH_OUTPUT_FILE_OTHERS ]
+    for old_output_file in out_filelist:
+        if os.path.exists(old_output_file):
+            os.remove(old_output_file)
+
+
+remove_output_files()
 df_products = pd.read_csv(r"data/products.csv", index_col=0)
 for filenames in process_filenames:
     in_parse_result = log_parser(filenames[0], filenames[2])
