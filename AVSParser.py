@@ -1,6 +1,7 @@
 import pandas as pd
 import openpyxl
 import os
+import types
 
 VOLUME_TREND_LOG_FILE = r"data/VolumeTrendQuery.csv"
 POST_SEARCH_LOG_FILE = r"data/PostSearchQuery.csv"
@@ -9,13 +10,18 @@ POST_SEARCH_OUTPUT_FILE = r"output/PostSearchQuery_products.csv"
 VOLUME_TREND_OUTPUT_FILE_OTHERS = r"output/volumeTrendQuery_others.xlsx"
 POST_SEARCH_OUTPUT_FILE_OTHERS = r"output/PostSearchQuery_others.xlsx"
 
-process_filenames = [[VOLUME_TREND_LOG_FILE, VOLUME_TREND_OUTPUT_FILE, VOLUME_TREND_OUTPUT_FILE_OTHERS],\
+process_filenames = [[VOLUME_TREND_LOG_FILE, VOLUME_TREND_OUTPUT_FILE, VOLUME_TREND_OUTPUT_FILE_OTHERS], \
                      [POST_SEARCH_LOG_FILE, POST_SEARCH_OUTPUT_FILE, POST_SEARCH_OUTPUT_FILE_OTHERS]]
-col_list = ["type", "id", "start", "end", "include_model", "keyword", "author", "timezone_offset", "page", "sort", "order"]
+col_list = ["type", "id", "start", "end", "include_model", "keyword", "author", "timezone_offset", "page", "sort",
+            "order"]
 
 
 def log_parser(filename, output_file_others):
-    series_ct = pd.read_csv(filename).iloc[:, 5]
+    try:
+        series_ct = pd.read_csv(filename).iloc[:, 5]
+    except FileNotFoundError:
+        print(f"{filename} not found!!!")
+        return False
     ct_list = series_ct.tolist()
     df_result = pd.DataFrame([], columns=col_list)
     for single_list in ct_list:
@@ -45,7 +51,7 @@ def log_parser(filename, output_file_others):
     df_keyword = pd.DataFrame({'keyword': series_keyword.index, 'counts': series_keyword.values})
     print(df_result["author"].value_counts())
     series_author = df_result["author"].value_counts()
-    df_author = pd.DataFrame({'author': series_author.index, 'counts': series_author.values })
+    df_author = pd.DataFrame({'author': series_author.index, 'counts': series_author.values})
     writer = pd.ExcelWriter(output_file_others)
     df_type.to_excel(writer, sheet_name="type")
     df_include_model.to_excel(writer, sheet_name="include_model")
@@ -87,7 +93,8 @@ def handle_products(df_input, df_prods, out_filename):
 
 
 def remove_output_files():
-    out_filelist = [VOLUME_TREND_OUTPUT_FILE, POST_SEARCH_OUTPUT_FILE,VOLUME_TREND_OUTPUT_FILE_OTHERS,POST_SEARCH_OUTPUT_FILE_OTHERS ]
+    out_filelist = [VOLUME_TREND_OUTPUT_FILE, POST_SEARCH_OUTPUT_FILE, VOLUME_TREND_OUTPUT_FILE_OTHERS,
+                    POST_SEARCH_OUTPUT_FILE_OTHERS]
     for old_output_file in out_filelist:
         if os.path.exists(old_output_file):
             os.remove(old_output_file)
@@ -97,4 +104,7 @@ remove_output_files()
 df_products = pd.read_csv(r"data/products.csv", index_col=0)
 for filenames in process_filenames:
     in_parse_result = log_parser(filenames[0], filenames[2])
-    handle_products(in_parse_result, df_products, filenames[1])
+    try:
+        handle_products(in_parse_result, df_products, filenames[1])
+    except:
+        print("Parsing Result is Empty!")
