@@ -2,6 +2,7 @@ import pandas as pd
 import openpyxl
 import os
 import types
+from pathlib import Path
 
 VOLUME_TREND_LOG_FILE = r"data/VolumeTrendQuery.csv"
 POST_SEARCH_LOG_FILE = r"data/PostSearchQuery.csv"
@@ -99,6 +100,8 @@ def remove_output_files():
         if os.path.exists(old_output_file):
             os.remove(old_output_file)
 
+if Path('./output').exists() == False:
+    os.makedirs('./output')
 
 remove_output_files()
 df_products = pd.read_csv(r"data/products.csv", index_col=0)
